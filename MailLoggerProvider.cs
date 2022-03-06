@@ -8,17 +8,16 @@ namespace com.alexanderhirschfeld.Logging.MailLogging
     public sealed class MailLoggerProvider : ILoggerProvider
     {
         private readonly MailLoggerOptions _mailLoggerOptions;
-        public string CategoryName { get; private set; }
 
         public MailLoggerProvider(IOptions<MailLoggerOptions> mailLoggerOptions)
         {
             _mailLoggerOptions = mailLoggerOptions.Value;
+            _mailLoggerOptions.Validate();
         }
 
         public ILogger CreateLogger(string categoryName)
         {
-            this.CategoryName = categoryName;
-            return new MailLogger(this);
+            return new MailLogger(this, categoryName);
         }
 
         public MailLoggerOptions GetOptions() => _mailLoggerOptions;

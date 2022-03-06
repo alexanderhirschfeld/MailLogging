@@ -8,10 +8,12 @@ namespace com.alexanderhirschfeld.Logging.MailLogging
     public sealed class MailLogger : ILogger
     {
         private readonly MailLoggerProvider _mailLoggerProvider;
+        private readonly string _categoryName;
 
-        public MailLogger(MailLoggerProvider mailLoggerProvider)
+        public MailLogger(MailLoggerProvider mailLoggerProvider, string categoryName)
         {
             _mailLoggerProvider = mailLoggerProvider;
+            _categoryName = categoryName;
         }
 
         public IDisposable BeginScope<TState>(TState state)
@@ -33,24 +35,24 @@ namespace com.alexanderhirschfeld.Logging.MailLogging
 
             MailLoggerOptions options = _mailLoggerProvider.GetOptions();
 
-            StringBuilder builder = new StringBuilder();
-            builder.Append($"EventId: {eventId}\r\n");
-            builder.Append($"LogLevel: {logLevel}\r\n");
-            builder.Append($"Application: {AppDomain.CurrentDomain.FriendlyName}\r\n");
-            builder.Append($"Context: {_mailLoggerProvider.CategoryName}\r\n");
-            builder.Append($"Time: {DateTimeOffset.Now}\r\n");
-            builder.Append($"Message: {formatter(state, exception)}\r\n");
+            StringBuilder body = new StringBuilder();
+            body.Append($"EventId: {eventId}\r\n");
+            body.Append($"LogLevel: {logLevel}\r\n");
+            body.Append($"Application: {AppDomain.CurrentDomain.FriendlyName}\r\n");
+            body.Append($"Context: {_categoryName}\r\n");
+            body.Append($"Time: {DateTimeOffset.Now}\r\n");
+            body.Append($"Message: {formatter(state, exception)}\r\n");
             if (exception is not null)
             {
-                builder.Append($"Exception: {exception.Message}\r\n");
-                builder.Append($"Trace: {exception.StackTrace}\r\n");
+                body.Append($"Exception: {exception.Message}\r\n");
+                body.Append($"Trace: {exception.StackTrace}\r\n");
             }
 
             MailMessage mailMessage = new MailMessage
             {
-                From = new MailAddress(options.From),
-                Subject = $"[{logLevel.ToString().ToUpper()}] [{AppDomain.CurrentDomain.FriendlyName}] {_mailLoggerProvider.CategoryName}",
-                Body = builder.ToString(),
+                From = options.GetFrom(),
+                Subject = $"[{logLevel.ToString().ToUpper()}] [{AppDomain.CurrentDomain.FriendlyName}] {_categoryName}",
+                Body = body.ToString(),
             };
             options.GetRecipients().ForEach(recipient => mailMessage.To.Add(recipient));
 

@@ -1,4 +1,6 @@
-﻿namespace com.alexanderhirschfeld.Logging.MailLogging
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace com.alexanderhirschfeld.Logging.MailLogging
 {
     public class SMTPConfiguration
     {
